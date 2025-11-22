@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework_simplejwt",
     "crop_app",
+    "django_extensions",
 ]
 
 MIDDLEWARE = [
@@ -79,9 +80,9 @@ WSGI_APPLICATION = "crop_app_project.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',           # Your database name
-        'USER': 'postgres',            # Your username
-        'PASSWORD': 'admin',   # The password you just entered
+        'NAME': 'crop_project',           # Your database name
+        'USER': 'admin_crop',            # Your username
+        'PASSWORD': 'mesy',   # The password you just entered
         'HOST': 'localhost',
         'PORT': '5432',
     }
