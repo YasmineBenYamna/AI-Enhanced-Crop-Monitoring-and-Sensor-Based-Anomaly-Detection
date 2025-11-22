@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "rest_framework_simplejwt",
-    "crop_app.apps.CropAppConfig",
+    "crop_app",
 ]
 
 MIDDLEWARE = [
@@ -53,7 +53,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "DS2_SOA.urls"
+ROOT_URLCONF = "crop_app_project.urls"
 
 TEMPLATES = [
     {
@@ -70,7 +70,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "DS2_SOA.wsgi.application"
+WSGI_APPLICATION = "crop_app_project.wsgi.application"
 
 
 # Database
@@ -81,7 +81,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',           # Your database name
         'USER': 'postgres',            # Your username
-        'PASSWORD': 'admin123',   # The password you just entered
+        'PASSWORD': 'admin',   # The password you just entered
         'HOST': 'localhost',
         'PORT': '5432',
     }
