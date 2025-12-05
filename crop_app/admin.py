@@ -1,79 +1,83 @@
+
 from django.contrib import admin
 from .models import FarmProfile, FieldPlot, SensorReading, AnomalyEvent, AgentRecommendation
 
 
 @admin.register(FarmProfile)
 class FarmProfileAdmin(admin.ModelAdmin):
-    list_display = ['id', 'owner', 'location', 'crop_type', 'size', 'created_at']
-    list_filter = ['crop_type', 'location']
-    search_fields = ['owner', 'location', 'crop_type']
-    ordering = ['owner']
+    """Admin interface for FarmProfile"""
+    list_display = ['id', 'owner', 'location', 'size', 'crop_type', 'created_at']
+    list_filter = ['crop_type', 'created_at']
+    search_fields = ['location', 'owner__username', 'owner__email']
     readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Owner Information', {
+            'fields': ('owner',)
+        }),
+        ('Farm Details', {
+            'fields': ('location', 'size', 'crop_type')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
 
 @admin.register(FieldPlot)
 class FieldPlotAdmin(admin.ModelAdmin):
-    list_display = ['id', 'plot_name', 'crop_variety', 'farm', 'created_at']
-    list_filter = ['crop_variety', 'farm']
-    search_fields = ['plot_name', 'crop_variety', 'farm__owner']
-    ordering = ['id']
+    """Admin interface for FieldPlot"""
+    list_display = ['id', 'plot_name', 'farm', 'crop_variety', 'created_at']
+    list_filter = ['crop_variety', 'created_at']
+    search_fields = ['plot_name', 'farm__owner__username']
     readonly_fields = ['created_at']
-
-    def get_queryset(self, request):
-        """Optimize queries by selecting related farm"""
-        qs = super().get_queryset(request)
-        return qs.select_related('farm')
 
 
 @admin.register(SensorReading)
 class SensorReadingAdmin(admin.ModelAdmin):
-    list_display = ['id', 'timestamp', 'plot', 'sensor_type', 'value', 'source']
+    """Admin interface for SensorReading"""
+    list_display = ['id', 'plot', 'sensor_type', 'value', 'timestamp', 'source']
     list_filter = ['sensor_type', 'source', 'timestamp']
-    search_fields = ['plot__plot_name', 'plot__farm__owner']
-    ordering = ['-timestamp']
+    search_fields = ['plot__plot_name', 'plot__farm__owner__username']
     readonly_fields = ['timestamp']
     date_hierarchy = 'timestamp'
-
+    
+    # Show only recent readings by default
     def get_queryset(self, request):
-        """Optimize queries"""
         qs = super().get_queryset(request)
-        return qs.select_related('plot__farm')
+        return qs.select_related('plot__farm__owner')
 
 
 @admin.register(AnomalyEvent)
 class AnomalyEventAdmin(admin.ModelAdmin):
-    list_display = ['id', 'timestamp', 'plot', 'anomaly_type', 'severity', 'model_confidence', 'has_recommendation']
-    list_filter = ['severity', 'anomaly_type', 'timestamp']
-    search_fields = ['anomaly_type', 'plot__plot_name', 'plot__farm__owner']
-    ordering = ['-timestamp']
+    """Admin interface for AnomalyEvent"""
+    list_display = ['id', 'plot', 'anomaly_type', 'severity', 
+                    'model_confidence', 'timestamp']
+    list_filter = ['anomaly_type', 'severity', 'timestamp']
+    search_fields = ['plot__plot_name', 'anomaly_type']
     readonly_fields = ['timestamp']
     date_hierarchy = 'timestamp'
-
-    def has_recommendation(self, obj):
-        """Show if anomaly has a recommendation"""
-        try:
-            return obj.recommendation is not None
-        except AgentRecommendation.DoesNotExist:
-            return False
-    has_recommendation.boolean = True
-    has_recommendation.short_description = 'Has Recommendation'
-
-    def get_queryset(self, request):
-        """Optimize queries"""
-        qs = super().get_queryset(request)
-        return qs.select_related('plot__farm').prefetch_related('recommendation')
 
 
 @admin.register(AgentRecommendation)
 class AgentRecommendationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'timestamp', 'anomaly_event', 'recommended_action', 'confidence']
+    """Admin interface for AgentRecommendation"""
+    list_display = ['id', 'anomaly_event', 'recommended_action', 
+                    'confidence', 'timestamp']
     list_filter = ['confidence', 'timestamp']
-    search_fields = ['recommended_action', 'explanation_text', 'anomaly_event__anomaly_type']
-    ordering = ['-timestamp']
+    search_fields = ['recommended_action', 'explanation_text']
     readonly_fields = ['timestamp']
-    date_hierarchy = 'timestamp'
-
-    def get_queryset(self, request):
-        """Optimize queries"""
-        qs = super().get_queryset(request)
-        return qs.select_related('anomaly_event__plot__farm')
+    
+    fieldsets = (
+        ('Anomaly Link', {
+            'fields': ('anomaly_event',)
+        }),
+        ('Recommendation', {
+            'fields': ('recommended_action', 'explanation_text', 'confidence')
+        }),
+        ('Timestamp', {
+            'fields': ('timestamp',),
+            'classes': ('collapse',)
+        }),
+    )

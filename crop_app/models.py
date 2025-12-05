@@ -20,7 +20,7 @@ class SeverityLevel(models.TextChoices):
 # -------------------- Core Models --------------------
 
 class FarmProfile(models.Model):
-    owner = models.CharField(max_length=100)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='farms')
     location = models.CharField(max_length=200)
     size = models.FloatField(help_text="Size in hectares", validators=[MinValueValidator(0)])
     crop_type = models.CharField(max_length=100)

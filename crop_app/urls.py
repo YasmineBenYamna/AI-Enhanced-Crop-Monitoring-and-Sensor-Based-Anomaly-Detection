@@ -1,6 +1,6 @@
 # crop_app/urls.py
 from django.urls import path
-from .views import (          # ← now it's .views, not .api_views
+from .views import (          
     SensorReadingListCreate,
     AnomalyList,
     RecommendationList
