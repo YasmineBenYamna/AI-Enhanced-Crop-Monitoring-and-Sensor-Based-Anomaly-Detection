@@ -27,15 +27,16 @@ class IsolationForestDetector:
             random_state: Random seed for reproducibility
         """
         self.model = IsolationForest(
-            contamination=contamination,
-            random_state=random_state,
+            contamination=contamination, # Expect 10% anomalies
+            random_state=random_state,  # Reproducible results
             n_estimators=100,  # Number of trees
-            max_samples='auto',
-            max_features=1.0,
-            bootstrap=False,
+            max_samples='auto',# Auto-decide sample size
+            max_features=1.0,# Use all features
+            bootstrap=False,# Don't resample data
             n_jobs=-1,  # Use all CPU cores
-            verbose=0
+            verbose=0 # Don't print progress
         )
+        #to prevent calling predict before training
         self.is_trained = False
         self.training_data_size = 0
         self.training_date = None
@@ -57,7 +58,9 @@ class IsolationForestDetector:
             )
         
         # Train the model
-        self.model.fit(normal_data)
+        self.model.fit(normal_data) #where learning 
+        
+        # now the model is trained and ready to predict
         self.is_trained = True
         self.training_data_size = normal_data.shape[0]
         self.training_date = datetime.now()
@@ -67,8 +70,8 @@ class IsolationForestDetector:
         
         stats = {
             'trained': True,
-            'n_samples': normal_data.shape[0],
-            'n_features': normal_data.shape[1],
+            'n_samples': normal_data.shape[0],  #point A (x,y,z) = 1 sample
+            'n_features': normal_data.shape[1], #in my case moisture, temp, humidity = 3 features
             'training_date': self.training_date.isoformat(),
             'mean_score': float(np.mean(training_scores)),
             'std_score': float(np.std(training_scores)),
