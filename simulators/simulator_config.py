@@ -10,7 +10,7 @@ class SimulatorConfig:
     """Configuration for sensor simulation parameters."""
     
     # API Configuration
-    DEFAULT_API_URL = "http://localhost:8000"
+    DEFAULT_API_URL = "http://localhost:8000/api"
     DEFAULT_PLOTS = [1, 2]
     DEFAULT_INTERVAL = 300  # 5 minutes in seconds
     

@@ -133,16 +133,16 @@ class SensorReadingSerializer(serializers.ModelSerializer):
     - Shows plot name for readability
     """
     # Allow posting with plot_id instead of nested plot object
-    plot_id = serializers.IntegerField(write_only=True)
+    #plot = serializers.IntegerField(write_only=True)
     
     # Show plot name in responses (easier to read than just ID)
     plot_name = serializers.CharField(source='plot.plot_name', read_only=True)
 
     class Meta:
         model = SensorReading
-        fields = ['id', 'timestamp', 'plot', 'plot_id', 'plot_name', 
+        fields = ['id', 'timestamp', 'plot', 'plot_name', 
                   'sensor_type', 'value', 'source']
-        read_only_fields = ['timestamp']  # Auto-set by database
+        read_only_fields = ['id','timestamp']  # Auto-set by database
 
     def validate_sensor_type(self, value):
         """

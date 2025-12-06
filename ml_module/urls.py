@@ -21,3 +21,5 @@ urlpatterns = [
     # Batch detection for all plots
     path('batch-detect/', views.batch_detect, name='batch_detect'),
 ]
+
+

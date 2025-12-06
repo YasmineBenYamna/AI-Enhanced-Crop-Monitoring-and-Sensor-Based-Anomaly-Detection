@@ -7,7 +7,7 @@ from .views import (
 )
 
 urlpatterns = [
-    path('api/sensor-readings/', SensorReadingListCreate.as_view()),
-    path('api/anomalies/', AnomalyList.as_view()),
-    path('api/recommendations/', RecommendationList.as_view()),
+    path('sensor-readings/', SensorReadingListCreate.as_view()),
+    path('anomalies/', AnomalyList.as_view()),
+    path('recommendations/', RecommendationList.as_view()),
 ]

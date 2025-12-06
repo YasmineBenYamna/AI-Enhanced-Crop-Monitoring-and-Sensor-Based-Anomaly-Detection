@@ -1,14 +1,16 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from crop_app.views import SensorReadingListCreate, AnomalyList, RecommendationList
-
+from django.contrib import admin
 urlpatterns = [
     # JWT Authentication endpoints
     path('auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    
-    # API endpoints
-    path('sensor-readings/', SensorReadingListCreate.as_view(), name='sensor-reading-list'),
-    path('anomalies/', AnomalyList.as_view(), name='anomaly-list'),
-    path('recommendations/', RecommendationList.as_view(), name='recommendation-list'),
+    path('admin/', admin.site.urls),
+    path('api/', include('crop_app.urls')), 
+    path('api/ml/', include('ml_module.urls')), 
+
 ]
+
+    
+    
