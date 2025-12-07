@@ -12,6 +12,10 @@ psycopg2 = "*"
 django-cors-headers = "*"
 rest-framework-simplejwt = "*"
 django-extensions = "*"
+idna = "*"
+certifi = "*"
+sci-kit = "*"
+learn = "*"
 
 [dev-packages]
 
