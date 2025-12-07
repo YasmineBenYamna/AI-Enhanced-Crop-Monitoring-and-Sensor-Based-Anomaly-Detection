@@ -10,13 +10,22 @@ from .serializers import (
 class SensorReadingListCreate(generics.ListCreateAPIView):
     queryset = SensorReading.objects.all().order_by('-timestamp')
     serializer_class = SensorReadingSerializer
-    permission_classes = [AllowAny] # Require authentication for posting data
+     
+    def get_permissions(self):
+        """
+        POST (simulator ingestion) = AllowAny
+        GET (dashboard viewing) = IsAuthenticated
+        """
+        if self.request.method == 'POST':
+            return [AllowAny()]  # Simulator can POST without auth
+        return [IsAuthenticated()]  # Dashboard needs JWT to GET
 
     def get_queryset(self):
         queryset = super().get_queryset() 
-        if not self.request.user.is_staff:# Restrict to user's farm plots
-            queryset = queryset.filter(plot__farm__owner=self.request.user) # Filter by plot if provided
-
+       # Only filter by user for authenticated requests (GET)
+        if self.request.user.is_authenticated and not self.request.user.is_staff:
+            queryset = queryset.filter(plot__farm__owner=self.request.user)
+            
         plot_id = self.request.query_params.get('plot') 
         if plot_id:
             queryset = queryset.filter(plot_id=plot_id)
