@@ -47,15 +47,15 @@ class SimulatorConfig:
         },
         'temperature': {
             'mean': 23.0,                # Average temperature (°C)
-            'amplitude': 8.0,            # Daily variation amplitude
+            'amplitude': 4.5,            # Daily variation amplitude
             'peak_hour': 14,             # Hour of peak temperature (2 PM - afternoon peak)
-            'noise_std': 1.5             # Random noise
+            'noise_std': 1.0             # Random noise
         },
         'humidity': {
             'mean': 60.0,                # Average humidity (%)
-            'amplitude': 15.0,           # Daily variation amplitude
+            'amplitude': 12.0,           # Daily variation amplitude
             'temp_correlation': -0.6,    # Negative correlation with temperature (inverse)
-            'noise_std': 3.0             # Random noise (some randomness)
+            'noise_std': 2.5             # Random noise (some randomness)
         }
     }
     

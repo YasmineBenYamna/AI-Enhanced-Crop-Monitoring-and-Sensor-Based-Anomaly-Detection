@@ -89,11 +89,23 @@ class AnomalyEvent(models.Model):
     anomaly_type = models.CharField(max_length=100)
     severity = models.CharField(max_length=50, choices=SeverityLevel.choices)
     model_confidence = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(1)])
+    
     # Relationship between AnomalyEvent and FieldPlot [* - 1]
     plot = models.ForeignKey(
         FieldPlot,
         on_delete=models.CASCADE,
         related_name='anomalies'
+    )
+    
+    # NEW: Relationship between AnomalyEvent and SensorReading [* - 1]
+    # Links to the specific sensor reading that triggered the anomaly
+    sensor_reading = models.ForeignKey(
+        SensorReading,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='anomaly_events',
+        help_text="The sensor reading that triggered this anomaly detection"
     )
 
     class Meta:
@@ -103,9 +115,13 @@ class AnomalyEvent(models.Model):
             models.Index(fields=['severity']),
             models.Index(fields=['anomaly_type']),
             models.Index(fields=['plot', 'timestamp']),
+            models.Index(fields=['sensor_reading']),  # NEW index
         ]
         verbose_name = 'Anomaly Event'
         verbose_name_plural = 'Anomaly Events'
+    
+    def __str__(self):
+        return f"{self.anomaly_type} - Plot {self.plot_id} - {self.severity}"
 
 
 class AgentRecommendation(models.Model):
@@ -117,7 +133,7 @@ class AgentRecommendation(models.Model):
     anomaly_event = models.OneToOneField(
         AnomalyEvent,
         on_delete=models.CASCADE,
-        related_name='recommendation'  # Changed to singular!
+        related_name='recommendation'
     )
 
     class Meta:

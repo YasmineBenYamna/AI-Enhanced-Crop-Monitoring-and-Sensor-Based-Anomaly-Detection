@@ -86,7 +86,10 @@ class SensorSimulator:
         
         # Add random noise
         temperature += np.random.normal(0, params['noise_std'])
-        
+        normal_ranges = self.config.NORMAL_RANGES['temperature']
+        temperature = max(normal_ranges['min'], temperature)  # Don't go below 18
+        temperature = min(normal_ranges['max'], temperature)  # Don't go above 28
+    
         return round(temperature, 2)
     
     def generate_humidity(self, temperature: float, time_of_day: float) -> float:
@@ -106,7 +109,9 @@ class SensorSimulator:
         humidity += np.random.normal(0, params['noise_std'])
         
         # Clamp to valid range
-        humidity = max(20.0, min(95.0, humidity))
+        normal_ranges = self.config.NORMAL_RANGES['humidity']
+        humidity = max(normal_ranges['min'], humidity)  # Don't go below 45
+        humidity = min(normal_ranges['max'], humidity)  # Don't go above 75
         
         return round(humidity, 2)
     
@@ -144,8 +149,10 @@ class SensorSimulator:
         # Add random noise
         current_moisture += np.random.normal(0, params['noise_std'])
         
-        # Clamp to valid range
-        current_moisture = max(30.0, min(80.0, current_moisture))
+        normal_ranges = self.config.NORMAL_RANGES['moisture']
+        current_moisture = max(normal_ranges['min'], current_moisture)  # Don't go below 45
+        current_moisture = min(normal_ranges['max'], current_moisture)  # Don't go above 75
+    
         
         # Update state
         self.moisture_state[plot_id] = current_moisture
@@ -427,16 +434,7 @@ if __name__ == '__main__':
 '''
 USAGE GUIDE 
 
-✅ OPTION 1: Use BOTH Files (Clearer/Easier)Training Phase (Normal Data):
-bashpython sensor_simulator.py --duration 2File: sensor_simulator.py (original)
-Purpose: Generate normal data for trainingTesting Phase (Anomaly Data):
-bashpython sensor_simulator_enhanced.py --scenario quick_test --duration 2File: sensor_simulator_enhanced.py (enhanced)
-Purpose: Generate anomalous data for testingWhy this is good:
-
-✅ Very clear which is which
-✅ No confusion about modes
-✅ Two separate files = two separate purposes
-✅ OPTION 2: Use ONLY Enhanced File (More Flexible)You can use ONLY sensor_simulator_enhanced.py for EVERYTHING by choosing the mode!Training Phase (Normal Data):
+✅  ONLY Enhanced File (More Flexible)You can use ONLY sensor_simulator_enhanced.py for EVERYTHING by choosing the mode!Training Phase (Normal Data):
 bash# METHOD 1: Use baseline scenario
 python sensor_simulator_enhanced.py --scenario baseline --duration 2
 

@@ -189,7 +189,7 @@ class DriftScenario(AnomalyScenario):
             duration_minutes: How long drift occurs (default: 15 min)
             drift_amount: Total drift amount (percentage or degrees, default: 20)
             drift_direction: 'up' or 'down'
-            affected_sensor: Which sensor to affect
+            affected_sensor: Which sensor to affect:temperature
         """
         super().__init__(
             name=f"FAST Calibration Drift - {affected_sensor}",

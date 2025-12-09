@@ -1,25 +1,33 @@
 """
-ML Module - URL Configuration
-Routes for ML model training and anomaly detection endpoints.
+ML Module - URL Configuration (ViewSet Version)
+Routes for ML anomaly detection API using ViewSets and routers.
 """
 
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
 app_name = 'ml_module'
 
+# Create router and register ViewSet
+router = DefaultRouter()
+router.register(r'', views.MLViewSet, basename='ml')
+
+# URL patterns
 urlpatterns = [
-    # Train the anomaly detection model
-    path('train/', views.train_model, name='train_model'),
-    
-    # Detect anomalies for a specific plot/sensor
-    path('detect/', views.detect_anomalies, name='detect_anomalies'),
-    
-    # Get model training status
-    path('status/', views.model_status, name='model_status'),
-    
-    # Batch detection for all plots
-    path('batch-detect/', views.batch_detect, name='batch_detect'),
+    path('', include(router.urls)),
 ]
 
+"""
+This creates the following endpoints (assuming main urls.py includes this at 'ml/'):
 
+POST   /ml/train/         - Train anomaly detection model
+POST   /ml/detect/        - Detect anomalies (single)
+POST   /ml/batch-detect/  - Detect anomalies (batch)
+GET    /ml/status/        - Get model training status
+
+The router automatically handles:
+- URL pattern generation
+- Endpoint naming
+- API browsable interface
+"""
