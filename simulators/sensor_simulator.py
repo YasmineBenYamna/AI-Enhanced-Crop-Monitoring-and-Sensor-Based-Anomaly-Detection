@@ -103,7 +103,11 @@ class SensorSimulator:
         
         humidity += np.random.normal(0, params['noise_std'])
         
+<<<<<<< HEAD
         humidity = max(20.0, min(95.0, humidity))
+=======
+        humidity = max(20.0, min(95.0, humidity))  # ← This line already exists
+>>>>>>> e8a40c8f3d9629e6a162fd096acb6bf76baa3f42
         
         return round(humidity, 2)
     
@@ -141,7 +145,11 @@ class SensorSimulator:
         # Add random noise
         current_moisture += np.random.normal(0, params['noise_std'])
     
+<<<<<<< HEAD
         current_moisture = max(30.0, min(80.0, current_moisture))
+=======
+        current_moisture = max(30.0, min(80.0, current_moisture))  # ← This line exists
+>>>>>>> e8a40c8f3d9629e6a162fd096acb6bf76baa3f42
         
         self.moisture_state[plot_id] = current_moisture
         
