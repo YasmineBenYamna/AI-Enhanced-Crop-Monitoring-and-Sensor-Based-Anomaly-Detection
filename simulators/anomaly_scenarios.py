@@ -18,7 +18,7 @@ class AnomalyScenario:
     """Base class for anomaly scenarios."""
     
     def __init__(self, name: str, description: str, 
-                 start_hour: float, duration_minutes: float):
+                start_hour: float, duration_minutes: float):
         """
         Initialize anomaly scenario.
         

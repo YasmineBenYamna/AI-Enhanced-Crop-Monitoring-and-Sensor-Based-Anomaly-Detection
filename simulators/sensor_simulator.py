@@ -1,13 +1,13 @@
 """
 Enhanced Sensor Data Simulator with Anomaly Injection
-Integrates anomaly scenarios with baseline sensor simulation.
-Usage: python sensor_simulator_enhanced.py --scenario [test_name]
+Real-time simulator with optional turbo mode.
+Usage: python sensor_simulator.py --scenario [test_name] --duration [hours]
 """
 
 import requests
 import time
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 import argparse
 from typing import Dict, List
 import math
@@ -62,6 +62,11 @@ class SensorSimulator:
             plot_id: self.baseline_params['moisture']['mean'] 
             for plot_id in plot_ids
         }
+        
+        # Turbo mode settings
+        self.turbo_mode = False
+        self.turbo_delay = 0.1
+        self.simulate_time = False
     
     def set_auth_token(self, token: str):
         """Set the JWT authentication token."""
@@ -77,41 +82,28 @@ class SensorSimulator:
         return (datetime.now() - self.start_time).total_seconds() / 3600
     
     def generate_temperature(self, time_of_day: float) -> float:
-        """Generate realistic temperature reading with diurnal cycle."""
         params = self.baseline_params['temperature']
         
-        # Sinusoidal pattern with peak at peak_hour (2 PM)
         phase = (time_of_day - params['peak_hour']) * (2 * math.pi / 24)
         temperature = params['mean'] + params['amplitude'] * math.cos(phase)
         
-        # Add random noise
         temperature += np.random.normal(0, params['noise_std'])
-        normal_ranges = self.config.NORMAL_RANGES['temperature']
-        temperature = max(normal_ranges['min'], temperature)  # Don't go below 18
-        temperature = min(normal_ranges['max'], temperature)  # Don't go above 28
-    
+        
         return round(temperature, 2)
     
     def generate_humidity(self, temperature: float, time_of_day: float) -> float:
-        """Generate realistic humidity reading with inverse correlation to temperature."""
         params = self.baseline_params['humidity']
         temp_params = self.baseline_params['temperature']
         
-        # Base humidity with diurnal pattern (inverse of temperature)
         phase = (time_of_day - temp_params['peak_hour']) * (2 * math.pi / 24)
         humidity = params['mean'] - params['amplitude'] * math.cos(phase)
         
-        # Add inverse correlation with temperature
         temp_deviation = temperature - temp_params['mean']
         humidity += params['temp_correlation'] * temp_deviation
         
-        # Add random noise
         humidity += np.random.normal(0, params['noise_std'])
         
-        # Clamp to valid range
-        normal_ranges = self.config.NORMAL_RANGES['humidity']
-        humidity = max(normal_ranges['min'], humidity)  # Don't go below 45
-        humidity = min(normal_ranges['max'], humidity)  # Don't go above 75
+        humidity = max(20.0, min(95.0, humidity))
         
         return round(humidity, 2)
     
@@ -148,13 +140,9 @@ class SensorSimulator:
         
         # Add random noise
         current_moisture += np.random.normal(0, params['noise_std'])
-        
-        normal_ranges = self.config.NORMAL_RANGES['moisture']
-        current_moisture = max(normal_ranges['min'], current_moisture)  # Don't go below 45
-        current_moisture = min(normal_ranges['max'], current_moisture)  # Don't go above 75
     
+        current_moisture = max(30.0, min(80.0, current_moisture))
         
-        # Update state
         self.moisture_state[plot_id] = current_moisture
         
         return round(current_moisture, 2)
@@ -230,20 +218,22 @@ class SensorSimulator:
         if self.anomaly_manager:
             self.anomaly_manager.update()
         
-        # Display cycle header
-        print(f"\n{'='*70}")
-        print(f"⏰ [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Simulation Cycle")
-        print(f"   Time of day: {time_of_day:.2f}h | Hours since start: {hours_since_start:.2f}h")
-        
-        # Display active anomalies
-        if self.anomaly_manager and self.anomaly_manager.has_active_anomalies():
-            active = self.anomaly_manager.get_active_scenarios()
-            print(f"   🚨 ACTIVE ANOMALIES: {', '.join(active)}")
-        
-        print(f"{'='*70}")
+        # Display cycle header (skip in turbo mode)
+        if not self.turbo_mode:
+            print(f"\n{'='*70}")
+            print(f"⏰ [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Simulation Cycle")
+            print(f"   Time of day: {time_of_day:.2f}h | Hours since start: {hours_since_start:.2f}h")
+            
+            # Display active anomalies
+            if self.anomaly_manager and self.anomaly_manager.has_active_anomalies():
+                active = self.anomaly_manager.get_active_scenarios()
+                print(f"   🚨 ACTIVE ANOMALIES: {', '.join(active)}")
+            
+            print(f"{'='*70}")
         
         for plot_id in self.plot_ids:
-            print(f"\n🌾 Plot {plot_id}:")
+            if not self.turbo_mode:
+                print(f"\n🌾 Plot {plot_id}:")
             
             # Generate normal values
             normal_temperature = self.generate_temperature(time_of_day)
@@ -272,18 +262,20 @@ class SensorSimulator:
             
             for reading, is_anomalous, normal_val in readings:
                 success = self.send_reading(reading)
-                status = "✅" if success else "❌"
-                anomaly_marker = " 🚨 ANOMALY" if is_anomalous else ""
                 
-                # Format value with appropriate unit
-                unit = "°C" if reading['sensor_type'] == 'temperature' else "%"
-                
-                print(f"   {status} {reading['sensor_type']:12s}: {reading['value']:6.2f}{unit}{anomaly_marker}")
-                
-                # Show deviation if anomalous
-                if is_anomalous:
-                    deviation = reading['value'] - normal_val
-                    print(f"      └─ Normal: {normal_val:6.2f}{unit}, Deviation: {deviation:+6.2f}{unit}")
+                if not self.turbo_mode:
+                    status = "✅" if success else "❌"
+                    anomaly_marker = " 🚨 ANOMALY" if is_anomalous else ""
+                    
+                    # Format value with appropriate unit
+                    unit = "°C" if reading['sensor_type'] == 'temperature' else "%"
+                    
+                    print(f"   {status} {reading['sensor_type']:12s}: {reading['value']:6.2f}{unit}{anomaly_marker}")
+                    
+                    # Show deviation if anomalous
+                    if is_anomalous:
+                        deviation = reading['value'] - normal_val
+                        print(f"      └─ Normal: {normal_val:6.2f}{unit}, Deviation: {deviation:+6.2f}{unit}")
     
     def run(self, duration_hours: float = None):
         """Run the simulator continuously or for a specified duration."""
@@ -295,9 +287,14 @@ class SensorSimulator:
         print(f"Interval: {self.interval} seconds ({self.interval/60:.1f} minutes)")
         
         if duration_hours:
-            print(f"Duration: {duration_hours} hours")
+            print(f"Duration: {duration_hours} hours ({duration_hours * 60:.1f} minutes)")
         else:
             print("Duration: Continuous (Ctrl+C to stop)")
+        
+        if self.turbo_mode:
+            print(f"\n⚡ TURBO MODE ENABLED (delay: {self.turbo_delay}s)")
+            if self.simulate_time:
+                print("   Using simulated time progression")
         
         if self.anomaly_manager:
             print("\n🔬 ANOMALY INJECTION ENABLED")
@@ -312,22 +309,41 @@ class SensorSimulator:
         
         start_time = time.time()
         cycle_count = 0
+        simulated_start = self.start_time if self.simulate_time else None
         
         try:
             while True:
                 cycle_count += 1
+                
+                # Update simulated time if enabled
+                if simulated_start:
+                    self.start_time = simulated_start + timedelta(seconds=cycle_count * self.interval)
+                
                 self.simulate_cycle()
                 
                 # Check duration
                 if duration_hours:
-                    elapsed_hours = (time.time() - start_time) / 3600
+                    if self.simulate_time:
+                        # In simulated mode, check simulated hours
+                        elapsed_hours = (cycle_count * self.interval) / 3600
+                    else:
+                        # Real time mode
+                        elapsed_hours = (time.time() - start_time) / 3600
+                    
                     if elapsed_hours >= duration_hours:
                         print(f"\n✅ Simulation completed: {duration_hours} hours ({cycle_count} cycles)")
                         break
                 
                 # Wait for next cycle
-                print(f"\n⏳ Waiting {self.interval} seconds until next cycle...")
-                time.sleep(self.interval)
+                if self.turbo_mode:
+                    sleep_time = self.turbo_delay
+                    if cycle_count % 10 == 0:  # Progress update every 10 cycles
+                        print(f"⚡ Turbo cycle {cycle_count} completed (sleeping {sleep_time}s)...")
+                else:
+                    sleep_time = self.interval
+                    print(f"\n⏳ Waiting {sleep_time} seconds until next cycle...")
+                
+                time.sleep(sleep_time)
                 
         except KeyboardInterrupt:
             print(f"\n\n⚠️ Simulation stopped by user after {cycle_count} cycles")
@@ -378,6 +394,22 @@ def main():
         default='baseline',
         help='Test scenario to run (default: baseline - no anomalies)'
     )
+    parser.add_argument(
+        '--turbo',
+        action='store_true',
+        help='Turbo mode: minimal sleep between cycles for fast data generation'
+    )
+    parser.add_argument(
+        '--turbo-delay',
+        type=float,
+        default=0.1,
+        help='Delay between cycles in turbo mode (seconds, default: 0.1)'
+    )
+    parser.add_argument(
+        '--simulate-time',
+        action='store_true',
+        help='Simulate historical time instead of using real time'
+    )
     
     args = parser.parse_args()
     
@@ -415,6 +447,17 @@ def main():
         anomaly_manager=anomaly_manager
     )
     
+    # Apply turbo mode settings
+    if args.turbo:
+        print(f"\n⚡ TURBO MODE ACTIVATED")
+        print(f"   Sleep delay: {args.turbo_delay}s (instead of {args.interval}s)")
+        simulator.turbo_mode = True
+        simulator.turbo_delay = args.turbo_delay
+    
+    if args.simulate_time:
+        print("   Using simulated historical time")
+        simulator.simulate_time = True
+    
     if args.token:
         simulator.set_auth_token(args.token)
     
@@ -424,31 +467,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-'''
-USAGE GUIDE 
-
-✅  ONLY Enhanced File (More Flexible)You can use ONLY sensor_simulator_enhanced.py for EVERYTHING by choosing the mode!Training Phase (Normal Data):
-bash# METHOD 1: Use baseline scenario
-python sensor_simulator_enhanced.py --scenario baseline --duration 2
-
-# METHOD 2: Use no anomaly manager (same result)
-python sensor_simulator_enhanced.py --duration 2
-# (but you need to modify code slightly - see below)Mode: --scenario baseline
-Purpose: Generate normal data for training (NO anomalies)Testing Phase (Anomaly Data):
-bash# Choose any anomaly scenario
-python sensor_simulator_enhanced.py --scenario quick_test --duration 2
-python sensor_simulator_enhanced.py --scenario irrigation_failure --duration 2
-python sensor_simulator_enhanced.py --scenario sensor_malfunction --duration 2Mode: --scenario quick_test (or any other anomaly scenario)
-Purpose: Generate anomalous data for testingWhy this is good:
-
-✅ Only one file to maintain
-✅ Can switch between modes easily
-✅ More flexible
- '''

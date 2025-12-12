@@ -16,6 +16,7 @@ idna = "*"
 certifi = "*"
 sci-kit = "*"
 learn = "*"
+scikit-learn = "*"
 
 [dev-packages]
 

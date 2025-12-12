@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plot Detail - Farm Monitoring</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Chart.js Library for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-brand">🌾 Farm Monitoring</div>
+        <div class="nav-menu">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="alerts.html">Alerts</a>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 id="plotName">Plot Details</h1>
+        
+        <!-- Time Range Buttons -->
+        <div class="time-range">
+            <button onclick="loadData('24h')" class="active">Last 24h</button>
+            <button onclick="loadData('7d')">Last 7 days</button>
+            <button onclick="loadData('30d')">Last 30 days</button>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts">
+            <div class="chart-box">
+                <h3>🌡️ Temperature (°C)</h3>
+                <canvas id="tempChart"></canvas>
+            </div>
+            
+            <div class="chart-box">
+                <h3>💧 Humidity (%)</h3>
+                <canvas id="humidityChart"></canvas>
+            </div>
+            
+            <div class="chart-box">
+                <h3>🌱 Soil Moisture (%)</h3>
+                <canvas id="moistureChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/plot-detail.js"></script>
+</body>
+</html>

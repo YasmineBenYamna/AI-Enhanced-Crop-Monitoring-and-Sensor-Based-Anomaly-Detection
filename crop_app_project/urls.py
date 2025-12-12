@@ -9,6 +9,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('crop_app.urls')), 
     path('api/ml/', include('ml_module.urls')), 
+    path('api/agent/', include('ai_agent.urls')),
 
 ]
 

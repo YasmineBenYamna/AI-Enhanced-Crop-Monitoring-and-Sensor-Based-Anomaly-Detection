@@ -43,11 +43,12 @@ INSTALLED_APPS = [
     "django_extensions",
     "crop_app",
     "ml_module",
+    "ai_agent",
     
 ]
 
 MIDDLEWARE = [
-     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.common.CommonMiddleware',

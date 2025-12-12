@@ -27,16 +27,15 @@ class IsolationForestDetector:
             random_state: Random seed for reproducibility
         """
         self.model = IsolationForest(
-            contamination=contamination, # Expect 10% anomalies
-            random_state=random_state,  # Reproducible results
-            n_estimators=100,  # Number of trees
-            max_samples='auto',# Auto-decide sample size
-            max_features=1.0,# Use all features
-            bootstrap=False,# Don't resample data
-            n_jobs=-1,  # Use all CPU cores
-            verbose=0 # Don't print progress
+            contamination=contamination,
+            random_state=random_state,
+            n_estimators=100,
+            max_samples='auto',
+            max_features=1.0,
+            bootstrap=False,
+            n_jobs=-1,
+            verbose=0
         )
-        #to prevent calling predict before training
         self.is_trained = False
         self.training_data_size = 0
         self.training_date = None
@@ -58,9 +57,9 @@ class IsolationForestDetector:
             )
         
         # Train the model
-        self.model.fit(normal_data) #where learning 
+        self.model.fit(normal_data)
         
-        # now the model is trained and ready to predict
+        # Mark as trained
         self.is_trained = True
         self.training_data_size = normal_data.shape[0]
         self.training_date = datetime.now()
@@ -70,8 +69,8 @@ class IsolationForestDetector:
         
         stats = {
             'trained': True,
-            'n_samples': normal_data.shape[0],  #point A (x,y,z) = 1 sample
-            'n_features': normal_data.shape[1], #in my case moisture, temp, humidity = 3 features
+            'n_samples': normal_data.shape[0],
+            'n_features': normal_data.shape[1],
             'training_date': self.training_date.isoformat(),
             'mean_score': float(np.mean(training_scores)),
             'std_score': float(np.std(training_scores)),
@@ -136,9 +135,8 @@ class IsolationForestDetector:
             is_anomaly = (pred == -1)
             
             # Convert score to confidence (0-1 range)
-            # More negative score = higher confidence it's an anomaly
             if is_anomaly:
-                confidence = min(1.0, abs(score) / 0.5)  # Normalize to 0-1
+                confidence = min(1.0, abs(score) / 0.5)
             else:
                 confidence = min(1.0, score / 0.5) if score > 0 else 0.0
             
@@ -186,24 +184,34 @@ class IsolationForestDetector:
         if not self.is_trained:
             raise ValueError("Cannot save untrained model")
         
+        # Save all necessary data
         model_data = {
             'model': self.model,
             'is_trained': self.is_trained,
             'training_data_size': self.training_data_size,
-            'training_date': self.training_date
+            'training_date': self.training_date,
+            'contamination': self.model.contamination,
+            'random_state': self.model.random_state
         }
+        
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
         
         with open(filepath, 'wb') as f:
             pickle.dump(model_data, f)
         
         print(f"✅ Model saved to: {filepath}")
     
-    def load_model(self, filepath: str):
+    @classmethod
+    def load_model(cls, filepath: str):
         """
-        Load trained model from file.
+        Load trained model from file (CLASS METHOD).
         
         Args:
             filepath: Path to the saved model
+            
+        Returns:
+            IsolationForestDetector: Loaded detector instance
         """
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Model file not found: {filepath}")
@@ -211,13 +219,23 @@ class IsolationForestDetector:
         with open(filepath, 'rb') as f:
             model_data = pickle.load(f)
         
-        self.model = model_data['model']
-        self.is_trained = model_data['is_trained']
-        self.training_data_size = model_data['training_data_size']
-        self.training_date = model_data['training_date']
+        # Create new instance
+        contamination = model_data.get('contamination', 0.1)
+        random_state = model_data.get('random_state', 42)
+        detector = cls(contamination=contamination, random_state=random_state)
+        
+        # Restore saved state
+        detector.model = model_data['model']
+        detector.is_trained = model_data['is_trained']
+        detector.training_data_size = model_data['training_data_size']
+        detector.training_date = model_data['training_date']
         
         print(f"✅ Model loaded from: {filepath}")
-        print(f"   Trained on {self.training_data_size} samples at {self.training_date}")
+        print(f"   Trained: {detector.is_trained}")
+        print(f"   Training size: {detector.training_data_size} samples")
+        print(f"   Training date: {detector.training_date}")
+        
+        return detector
 
 
 class AnomalyDetectionService:
@@ -282,7 +300,7 @@ if __name__ == '__main__':
     # Generate synthetic training data (normal)
     print("\n1. Generating training data (normal patterns)...")
     np.random.seed(42)
-    normal_data = np.random.randn(100, 5) * 0.5  # 100 samples, 5 features
+    normal_data = np.random.randn(100, 5) * 0.5
     print(f"   Training data shape: {normal_data.shape}")
     
     # Create and train detector
@@ -303,7 +321,7 @@ if __name__ == '__main__':
     
     # Test on anomalous data
     print("\n4. Testing on anomalous data...")
-    test_anomaly = np.random.randn(10, 5) * 3.0  # Much larger variance = anomalies
+    test_anomaly = np.random.randn(10, 5) * 3.0
     results_anomaly = detector.detect_with_confidence(test_anomaly)
     anomalies_detected = sum(1 for r in results_anomaly if r['is_anomaly'])
     print(f"   Detected {anomalies_detected}/10 as anomalies (should be ~8-10)")
@@ -321,8 +339,14 @@ if __name__ == '__main__':
     print("\n6. Testing model save/load...")
     detector.save_model('/tmp/test_model.pkl')
     
-    detector2 = IsolationForestDetector()
-    detector2.load_model('/tmp/test_model.pkl')
+    # ✅ Now load_model is a class method
+    detector2 = IsolationForestDetector.load_model('/tmp/test_model.pkl')
     print(f"   ✅ Model loaded successfully!")
+    print(f"   Is trained: {detector2.is_trained}")
+    
+    # Test loaded model
+    print("\n7. Testing loaded model...")
+    test_results = detector2.detect_with_confidence(test_anomaly)
+    print(f"   Loaded model detected {sum(1 for r in test_results if r['is_anomaly'])}/10 anomalies")
     
     print("\n✅ All tests completed!")
