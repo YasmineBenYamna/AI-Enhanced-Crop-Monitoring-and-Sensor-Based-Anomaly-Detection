@@ -77,41 +77,28 @@ class SensorSimulator:
         return (datetime.now() - self.start_time).total_seconds() / 3600
     
     def generate_temperature(self, time_of_day: float) -> float:
-        """Generate realistic temperature reading with diurnal cycle."""
         params = self.baseline_params['temperature']
         
-        # Sinusoidal pattern with peak at peak_hour (2 PM)
         phase = (time_of_day - params['peak_hour']) * (2 * math.pi / 24)
         temperature = params['mean'] + params['amplitude'] * math.cos(phase)
         
-        # Add random noise
         temperature += np.random.normal(0, params['noise_std'])
-        normal_ranges = self.config.NORMAL_RANGES['temperature']
-        temperature = max(normal_ranges['min'], temperature)  # Don't go below 18
-        temperature = min(normal_ranges['max'], temperature)  # Don't go above 28
-    
+        
         return round(temperature, 2)
     
     def generate_humidity(self, temperature: float, time_of_day: float) -> float:
-        """Generate realistic humidity reading with inverse correlation to temperature."""
         params = self.baseline_params['humidity']
         temp_params = self.baseline_params['temperature']
         
-        # Base humidity with diurnal pattern (inverse of temperature)
         phase = (time_of_day - temp_params['peak_hour']) * (2 * math.pi / 24)
         humidity = params['mean'] - params['amplitude'] * math.cos(phase)
         
-        # Add inverse correlation with temperature
         temp_deviation = temperature - temp_params['mean']
         humidity += params['temp_correlation'] * temp_deviation
         
-        # Add random noise
         humidity += np.random.normal(0, params['noise_std'])
         
-        # Clamp to valid range
-        normal_ranges = self.config.NORMAL_RANGES['humidity']
-        humidity = max(normal_ranges['min'], humidity)  # Don't go below 45
-        humidity = min(normal_ranges['max'], humidity)  # Don't go above 75
+        humidity = max(20.0, min(95.0, humidity))  # ← This line already exists
         
         return round(humidity, 2)
     
@@ -148,13 +135,9 @@ class SensorSimulator:
         
         # Add random noise
         current_moisture += np.random.normal(0, params['noise_std'])
-        
-        normal_ranges = self.config.NORMAL_RANGES['moisture']
-        current_moisture = max(normal_ranges['min'], current_moisture)  # Don't go below 45
-        current_moisture = min(normal_ranges['max'], current_moisture)  # Don't go above 75
     
+        current_moisture = max(30.0, min(80.0, current_moisture))  # ← This line exists
         
-        # Update state
         self.moisture_state[plot_id] = current_moisture
         
         return round(current_moisture, 2)
