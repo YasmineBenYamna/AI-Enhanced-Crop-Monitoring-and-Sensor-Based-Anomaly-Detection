@@ -53,6 +53,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  
@@ -97,13 +98,12 @@ DATABASES = {
     }
 }'''
 DATABASES = {
-    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
-    {
+    'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'crop_project'),
-        'USER': os.getenv('DB_USER', 'admic_crop'),
+        'NAME': os.getenv('DB_NAME', 'crop_app'),
+        'USER': os.getenv('DB_USER', 'admin_crop'),
         'PASSWORD': os.getenv('DB_PASSWORD', 'mesy'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'HOST': os.getenv('DB_HOST', 'db'),
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
