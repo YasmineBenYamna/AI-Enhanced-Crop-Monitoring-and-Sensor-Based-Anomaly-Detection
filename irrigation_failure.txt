@@ -1,0 +1,8 @@
+irrigation_failure
+cd simulators
+python sensor_simulator.py --api-url http://localhost:8000/api --scenario irrigation_failure --duration 0.25 --interval 60 --plots 1
+
+
+
+
+ (Invoke-WebRequest -Uri http://localhost:8000/api/ml/detect/ -Method POST -Headers @{"Content-Type"="application/json"} -Body '{"plot_id":1,"sensor_type":"moisture"}').Content

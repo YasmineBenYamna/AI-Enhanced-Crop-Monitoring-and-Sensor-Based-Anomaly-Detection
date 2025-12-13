@@ -1,11 +1,50 @@
 # crop_app/api_views.py
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.shortcuts import render  # 👈 AJOUTER cette ligne
 from .models import SensorReading, AnomalyEvent, AgentRecommendation
 from .serializers import (
     SensorReadingSerializer, AnomalyEventSerializer, AgentRecommendationSerializer
 )
+from django.shortcuts import render
 
+# ========== VUE TEMPLATE HTML ==========
+def index(request):
+    return render(request, 'index.html')
+
+def charts(request):
+    return render(request, 'charts.html')
+
+def widgets(request):
+    return render(request, 'widgets.html')
+
+def colors(request):
+    return render(request, 'colors.html')
+
+def typography(request):
+    return render(request, 'typography.html')
+
+def login_page(request):
+    return render(request, 'login.html')
+
+def register(request):
+    return render(request, 'register.html')
+
+# Pages d'erreur
+def error_404(request, exception):
+    return render(request, '404.html', status=404)
+
+def error_500(request):
+    return render(request, '500.html', status=500)
+
+def error_404_page(request):
+    return render(request, '404.html')
+
+def error_500_page(request):
+    return render(request, '500.html')
+
+
+# ========== VUES API REST ==========
 # POST /api/sensor-readings/ + GET with ?plot=
 class SensorReadingListCreate(generics.ListCreateAPIView):
     queryset = SensorReading.objects.all().order_by('-timestamp')
